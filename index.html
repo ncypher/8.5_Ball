@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#07111d">
-  <meta name="description" content="8.5 Ball — a playful digital oracle.">
+  <meta name="description" content="8.5 Ball — a playful digital oracle in a physical, rotatable globe.">
   <title>8.5 Ball — Consult the Algorithm</title>
   <link rel="stylesheet" href="styles.css">
   <script src="app.js" defer></script>
@@ -17,40 +17,23 @@
         <h1>8.5 BALL</h1>
         <p class="subtitle">The future is uncertain. The answers are artificially intelligent.</p>
       </div>
-      <span class="version-pill">ORACLE v0.3</span>
+      <span class="version-pill">ORACLE v0.4</span>
     </header>
 
     <section class="workspace" aria-label="8.5 Ball oracle">
       <div class="stage">
         <div
           id="orb"
-          class="orb-scene"
+          class="orb-interaction"
           role="button"
           tabindex="0"
-          aria-label="Drag to rotate the 8.5 Ball. Click or press Enter to shake."
+          aria-label="Grab and rotate the 8.5 Ball. Click or press Enter to shake."
         >
-          <div id="orbShell" class="orb-shell">
-            <div id="surfaceRotator" class="surface-rotator">
-              <div class="surface-face surface-front">
-                <div class="oracle-lens">
-                  <div class="oracle-triangle" aria-hidden="true"></div>
-                  <div id="answer" class="oracle-copy" aria-live="polite">
-                    THE VOID AWAITS YOUR QUESTION
-                  </div>
-                </div>
-              </div>
-
-              <div class="surface-face surface-back" aria-hidden="true">
-                <div class="back-disc">8.5</div>
-              </div>
-            </div>
-
-            <div class="orb-glare" aria-hidden="true"></div>
-            <div class="orb-rim" aria-hidden="true"></div>
-          </div>
+          <canvas id="orbCanvas" aria-hidden="true"></canvas>
+          <span id="answer" class="sr-only" aria-live="polite">THE VOID AWAITS YOUR QUESTION</span>
         </div>
 
-        <p class="orb-tip">DRAG TO ROTATE • CLICK TO SHAKE</p>
+        <p class="orb-tip">GRAB THE SHELL TO ROTATE • CLICK TO SHAKE</p>
         <p id="stability" class="readout">REALITY STABILITY: 100%</p>
       </div>
 
@@ -83,7 +66,7 @@
         <button id="reset" class="secondary-button" type="button">RESET REALITY</button>
 
         <p class="fine-print">
-          Click, tap, drag, or shake your phone.<br>
+          The black shell rotates around a fluid interior.<br>
           Purely for entertainment. No actual foresight.
         </p>
       </aside>
