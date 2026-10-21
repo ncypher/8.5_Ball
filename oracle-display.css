@@ -1,0 +1,93 @@
+/* ORACLE v0.5 atmosphere pass */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.15;
+  background-image:
+    linear-gradient(rgb(116 234 255 / 3%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(116 234 255 / 3%) 1px, transparent 1px);
+  background-size: 54px 54px;
+  mask-image: radial-gradient(circle at 34% 15%, #000 0%, transparent 67%);
+}
+
+h1 {
+  color: #e5fbff;
+  text-shadow: 0 1px 0 #fff, 0 0 22px rgb(80 224 246 / 15%);
+}
+
+.eyebrow,
+.readout {
+  text-shadow: 0 0 12px rgb(62 221 244 / 20%);
+}
+
+.version-pill {
+  background: rgb(4 18 30 / 48%);
+  box-shadow: inset 0 0 14px rgb(69 223 244 / 4%), 0 0 18px rgb(43 218 242 / 7%);
+}
+
+.stage {
+  box-shadow: inset 0 0 90px rgb(0 0 0 / 24%), 0 18px 60px rgb(0 0 0 / 16%);
+}
+
+.stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.28;
+  background:
+    linear-gradient(90deg, transparent 49.8%, rgb(89 224 246 / 10%) 50%, transparent 50.2%),
+    linear-gradient(transparent 49.8%, rgb(89 224 246 / 8%) 50%, transparent 50.2%),
+    repeating-radial-gradient(circle at center, transparent 0 69px, rgb(77 218 240 / 4%) 70px 71px);
+}
+
+.orb-interaction::after {
+  content: "";
+  position: absolute;
+  inset: 4%;
+  pointer-events: none;
+  border-radius: 50%;
+  box-shadow: 0 0 72px rgb(45 224 248 / 5%);
+}
+
+.controls {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, rgb(12 31 45 / 92%), rgb(6 16 27 / 94%));
+  box-shadow:
+    inset 0 1px 0 rgb(172 244 255 / 3%),
+    0 16px 40px rgb(0 0 0 / 18%),
+    0 0 35px rgb(38 219 243 / 4%);
+}
+
+.controls::before {
+  content: "";
+  position: absolute;
+  width: 130px;
+  height: 1px;
+  right: 18px;
+  top: 28px;
+  background: linear-gradient(90deg, transparent, rgb(87 227 248 / 36%));
+}
+
+input,
+select {
+  box-shadow: inset 0 0 18px rgb(0 0 0 / 24%);
+}
+
+.primary-button {
+  background: linear-gradient(135deg, #82effc, #58cfe1);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 32%), 0 8px 22px rgb(45 212 235 / 11%);
+}
+
+.primary-button:hover {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 36%), 0 10px 28px rgb(45 212 235 / 18%);
+}
+
+.secondary-button {
+  background: linear-gradient(145deg, #17384a, #102838);
+}
