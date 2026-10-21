@@ -1,330 +1,37 @@
 'use strict';
-
-const replies = {
-  classic: [
-    'Signs point to yes.',
-    'Ask again later.',
-    'Outlook not so good.',
-    'Without a doubt.',
-    'Cannot predict now.',
-    'Better not tell you now.'
-  ],
-  oracle: [
-    'The answer is hiding in the question.',
-    'The probability is favorable. The consequences are interesting.',
-    'A door will open. Check what is behind it.',
-    'The future has declined to comment.',
-    'Your intuition already submitted its answer.'
-  ],
-  matrix: [
-    'There is no spoon. There is, however, a decision.',
-    'You have mistaken the simulation for the question.',
-    'Follow the anomaly.',
-    'The choice was made before you arrived.',
-    'Reality is buffering. Try again.'
-  ],
-  chaos: [
-    'Consult a suspiciously wise raccoon.',
-    'Absolutely. Unless it is Tuesday.',
-    'The council of rubber ducks approves.',
-    'Shake harder. The universe is lagging.',
-    'Your destiny involves a spreadsheet and a goose.'
-  ],
-  stoic: [
-    'Control your actions, not their outcome.',
-    'The obstacle may be the way.',
-    'You already possess the means to begin.',
-    'Do not surrender your judgment to an oracle.',
-    'Act with reason; accept uncertainty.'
-  ],
-  corporate: [
-    'Let us circle back after a synergy audit.',
-    'The roadmap is aligned with your aspirations.',
-    'Please open a ticket with Destiny Operations.',
-    'We should socialize this decision across stakeholders.',
-    'The answer is pending executive sign-off.'
-  ],
-  cosmic: [
-    'Something beyond the stars has noticed your inquiry.',
-    'The silence between galaxies says no.',
-    'Your question is older than your universe.',
-    'The stars blinked. That was not an accident.',
-    'Some answers should remain submerged.'
-  ],
-  reverse: [
-    'What would you attempt if failure were harmless?',
-    'What do you already know, but refuse to admit?',
-    'If this choice were easy, what would you do?',
-    'Who benefits from your hesitation?',
-    'Which question frightens you more than this one?'
-  ]
-};
-
-const orb = document.getElementById('orb');
-const orbShell = document.getElementById('orbShell');
-const surfaceRotator = document.getElementById('surfaceRotator');
-const answer = document.getElementById('answer');
-const history = document.getElementById('history');
-const stability = document.getElementById('stability');
-const question = document.getElementById('question');
-const mode = document.getElementById('mode');
-const shakeButton = document.getElementById('shake');
-const shareButton = document.getElementById('share');
-const resetButton = document.getElementById('reset');
-
-let shakeCount = 0;
-let lastAnswer = '';
-let busy = false;
-let entries = [];
-let dragState = null;
-let suppressNextClick = false;
-let rotationX = 0;
-let rotationY = 0;
-let lastMotionShake = 0;
-
-function randomIndex(max) {
-  if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
-    const value = new Uint32Array(1);
-    window.crypto.getRandomValues(value);
-    return value[0] % max;
-  }
-
-  return Math.floor(Math.random() * max);
-}
-
-function renderRotation() {
-  surfaceRotator.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
-}
-
-function fitAnswer(text) {
-  answer.classList.remove('medium', 'long');
-
-  if (text.length > 58) {
-    answer.classList.add('long');
-  } else if (text.length > 38) {
-    answer.classList.add('medium');
-  }
-}
-
-function setAnswer(text) {
-  fitAnswer(text);
-  answer.textContent = text;
-}
-
-function renderHistory() {
-  history.replaceChildren();
-
-  if (entries.length === 0) {
-    const emptyState = document.createElement('p');
-    emptyState.className = 'empty-state';
-    emptyState.textContent = 'The oracle has not yet spoken.';
-    history.append(emptyState);
-    return;
-  }
-
-  for (const entry of entries) {
-    const item = document.createElement('div');
-    item.className = 'entry';
-
-    const prompt = document.createElement('span');
-    prompt.textContent = `${entry.question} • ${entry.mode}`;
-
-    const prophecy = document.createElement('strong');
-    prophecy.textContent = entry.answer;
-
-    item.append(prompt, prophecy);
-    history.append(item);
-  }
-}
-
-function shake() {
-  if (busy) {
-    return;
-  }
-
-  busy = true;
-  shakeCount += 1;
-  shakeButton.disabled = true;
-  setAnswer('CONSULTING THE VOID…');
-
-  orbShell.classList.remove('shaking');
-  void orbShell.offsetWidth;
-  orbShell.classList.add('shaking');
-
-  window.setTimeout(() => {
-    const options = replies[mode.value] || replies.oracle;
-    lastAnswer = options[randomIndex(options.length)];
-    setAnswer(lastAnswer);
-
-    entries.unshift({
-      question: question.value.trim() || 'An unspoken question',
-      answer: lastAnswer,
-      mode: mode.options[mode.selectedIndex].text
-    });
-    entries = entries.slice(0, 8);
-    renderHistory();
-
-    const score = Math.max(8, 100 - shakeCount * 9);
-    stability.textContent = `REALITY STABILITY: ${score}%`;
-
-    busy = false;
-    shakeButton.disabled = false;
-  }, 720);
-}
-
-function beginDrag(event) {
-  if (event.button !== undefined && event.button !== 0) {
-    return;
-  }
-
-  dragState = {
-    pointerId: event.pointerId,
-    x: event.clientX,
-    y: event.clientY,
-    moved: false
-  };
-
-  orb.classList.add('dragging');
-  orb.setPointerCapture(event.pointerId);
-  event.preventDefault();
-}
-
-function moveDrag(event) {
-  if (!dragState || event.pointerId !== dragState.pointerId) {
-    return;
-  }
-
-  const deltaX = event.clientX - dragState.x;
-  const deltaY = event.clientY - dragState.y;
-
-  if (Math.abs(deltaX) + Math.abs(deltaY) > 2) {
-    dragState.moved = true;
-  }
-
-  rotationY += deltaX * 0.7;
-  rotationX -= deltaY * 0.55;
-  rotationX = Math.max(-68, Math.min(68, rotationX));
-
-  dragState.x = event.clientX;
-  dragState.y = event.clientY;
-  renderRotation();
-  event.preventDefault();
-}
-
-function endDrag(event) {
-  if (!dragState || event.pointerId !== dragState.pointerId) {
-    return;
-  }
-
-  suppressNextClick = dragState.moved;
-  dragState = null;
-  orb.classList.remove('dragging');
-
-  if (orb.hasPointerCapture(event.pointerId)) {
-    orb.releasePointerCapture(event.pointerId);
-  }
-}
-
-orb.addEventListener('pointerdown', beginDrag);
-orb.addEventListener('pointermove', moveDrag);
-orb.addEventListener('pointerup', endDrag);
-orb.addEventListener('pointercancel', endDrag);
-
-orb.addEventListener('click', () => {
-  if (suppressNextClick) {
-    suppressNextClick = false;
-    return;
-  }
-
-  shake();
-});
-
-orb.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter' || event.key === ' ') {
-    event.preventDefault();
-    shake();
-  }
-
-  if (event.key === 'ArrowLeft') {
-    rotationY -= 12;
-    renderRotation();
-  }
-
-  if (event.key === 'ArrowRight') {
-    rotationY += 12;
-    renderRotation();
-  }
-
-  if (event.key === 'ArrowUp') {
-    rotationX = Math.min(68, rotationX + 8);
-    renderRotation();
-  }
-
-  if (event.key === 'ArrowDown') {
-    rotationX = Math.max(-68, rotationX - 8);
-    renderRotation();
-  }
-});
-
-shakeButton.addEventListener('click', shake);
-
-question.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter') {
-    shake();
-  }
-});
-
-resetButton.addEventListener('click', () => {
-  shakeCount = 0;
-  entries = [];
-  lastAnswer = '';
-  rotationX = 0;
-  rotationY = 0;
-
-  renderRotation();
-  renderHistory();
-  setAnswer('THE VOID AWAITS YOUR QUESTION');
-  stability.textContent = 'REALITY STABILITY: 100%';
-});
-
-shareButton.addEventListener('click', async () => {
-  if (!lastAnswer) {
-    return;
-  }
-
-  const prompt = question.value.trim() || 'An unspoken question';
-  const prophecy = `🎱 8.5 BALL\nQ: ${prompt}\nA: ${lastAnswer}`;
-
-  try {
-    await navigator.clipboard.writeText(prophecy);
-    shareButton.textContent = 'COPIED!';
-    window.setTimeout(() => {
-      shareButton.textContent = 'COPY PROPHECY';
-    }, 1400);
-  } catch (error) {
-    window.prompt('Copy your prophecy:', prophecy);
-  }
-});
-
-window.addEventListener('devicemotion', (event) => {
-  const acceleration = event.accelerationIncludingGravity;
-  if (!acceleration) {
-    return;
-  }
-
-  const magnitude = Math.hypot(
-    acceleration.x || 0,
-    acceleration.y || 0,
-    acceleration.z || 0
-  );
-
-  const now = Date.now();
-  if (magnitude > 24 && now - lastMotionShake > 1800) {
-    lastMotionShake = now;
-    shake();
-  }
-});
-
-renderRotation();
-renderHistory();
-fitAnswer(answer.textContent);
+const $=id=>document.getElementById(id),TAU=Math.PI*2;
+const orb=$('orb'),canvas=$('orbCanvas'),ctx=canvas.getContext('2d'),live=$('answer'),history=$('history'),stability=$('stability'),question=$('question'),mode=$('mode'),shakeBtn=$('shake'),shareBtn=$('share'),resetBtn=$('reset');
+const replies={
+classic:['Signs point to yes.','Ask again later.','Outlook not so good.','Without a doubt.','Cannot predict now.','Better not tell you now.'],
+oracle:['The answer is hiding in the question.','The probability is favorable. The consequences are interesting.','A door will open. Check what is behind it.','The future has declined to comment.','Your intuition already submitted its answer.'],
+matrix:['There is no spoon. There is, however, a decision.','You have mistaken the simulation for the question.','Follow the anomaly.','The choice was made before you arrived.','Reality is buffering. Try again.'],
+chaos:['Consult a suspiciously wise raccoon.','Absolutely. Unless it is Tuesday.','The council of rubber ducks approves.','Shake harder. The universe is lagging.','Your destiny involves a spreadsheet and a goose.'],
+stoic:['Control your actions, not their outcome.','The obstacle may be the way.','You already possess the means to begin.','Do not surrender your judgment to an oracle.','Act with reason; accept uncertainty.'],
+corporate:['Let us circle back after a synergy audit.','The roadmap is aligned with your aspirations.','Please open a ticket with Destiny Operations.','We should socialize this decision across stakeholders.','The answer is pending executive sign-off.'],
+cosmic:['Something beyond the stars has noticed your inquiry.','The silence between galaxies says no.','Your question is older than your universe.','The stars blinked. That was not an accident.','Some answers should remain submerged.'],
+reverse:['What would you attempt if failure were harmless?','What do you already know, but refuse to admit?','If this choice were easy, what would you do?','Who benefits from your hesitation?','Which question frightens you more than this one?']};
+const S={w:400,h:400,dpr:1,yaw:0,pitch:0,vy:0,vp:0,drag:null,count:0,last:'',text:'THE VOID AWAITS YOUR QUESTION',busy:false,entries:[],shakeAt:0,timer:0,lastFrame:performance.now(),lastMotion:0};
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const dots=Array.from({length:42},(_,i)=>{const y=1-i/41*2,r=Math.sqrt(1-y*y),a=i*Math.PI*(3-Math.sqrt(5));return{x:Math.cos(a)*r,y,z:Math.sin(a)*r,s:.45+(i*7%10)/20}});
+const bubbles=Array.from({length:15},(_,i)=>({x:(i*47%101)/100*1.4-.7,y:(i*29%97)/96*1.6-.8,r:.007+(i*13%9)/500,v:.025+(i*17%13)/260}));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),smooth=(a,b,v)=>{v=clamp((v-a)/(b-a),0,1);return v*v*(3-2*v)};
+function rnd(n){if(crypto?.getRandomValues){const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]%n}return Math.floor(Math.random()*n)}
+function basis(yaw=S.yaw,pitch=S.pitch){const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);return{ex:{x:cy,y:0,z:-sy},ey:{x:sy*sp,y:cp,z:cy*sp},n:{x:sy*cp,y:-sp,z:cy*cp}}}
+function rot(p,b){return{x:p.x*b.ex.x+p.y*b.ey.x+p.z*b.n.x,y:p.x*b.ex.y+p.y*b.ey.y+p.z*b.n.y,z:p.x*b.ex.z+p.y*b.ey.z+p.z*b.n.z}}
+function resize(){const r=orb.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);S.w=Math.max(1,Math.round(r.width));S.h=Math.max(1,Math.round(r.height));S.dpr=d;const w=Math.round(S.w*d),h=Math.round(S.h*d);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}}
+function base(){ctx.setTransform(S.dpr,0,0,S.dpr,0,0)}
+function project(cx,cy,r,x,y){ctx.setTransform(S.dpr*r*x.x,S.dpr*-r*x.y,S.dpr*r*y.x,S.dpr*-r*y.y,S.dpr*cx,S.dpr*cy)}
+function wrap(text,width,lines){const words=text.trim().split(/\s+/),out=[];let line='';for(const word of words){const next=line?line+' '+word:word;if(!line||ctx.measureText(next).width<=width)line=next;else{out.push(line);line=word;if(out.length===lines-1)break}}if(line&&out.length<lines){const used=out.join(' ').split(/\s+/).filter(Boolean).length;out.push(words.slice(used).join(' ')||line)}return out.slice(0,lines)}
+function drawText(text,x,y,w,h,R){let size=R*.073,lines=[],lh;for(;size>=Math.max(8.5,R*.052);size-=.5){ctx.font=`800 ${size}px Inter,system-ui,sans-serif`;lh=size*1.14;lines=wrap(text,w,4);if(lines.length*lh<=h&&Math.max(...lines.map(v=>ctx.measureText(v).width),0)<=w)break}ctx.save();ctx.font=`800 ${size}px Inter,system-ui,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#f3fdff';ctx.shadowColor='#97f0ff';ctx.shadowBlur=R*.035;const y0=y-(lines.length-1)*lh/2;lines.forEach((v,i)=>ctx.fillText(v,x,y0+i*lh,w));ctx.restore()}
+function drawDie(cx,cy,R,t,p){const d=p?1-p:0,w=R*.94,h=R*.82,x=cx+Math.sin(p*Math.PI*19)*R*.15*d,y=cy+Math.sin(t*.00115)*R*.012+Math.cos(p*Math.PI*23)*R*.12*d,a=Math.sin(t*.0008)*.018+Math.sin(p*Math.PI*17)*.7*d,e=R*.045;ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.beginPath();ctx.moveTo(e,-h*.52+e);ctx.lineTo(w*.5+e,h*.48+e);ctx.lineTo(-w*.5+e,h*.48+e);ctx.closePath();ctx.fillStyle='rgba(0,5,20,.62)';ctx.shadowColor='rgba(0,0,0,.75)';ctx.shadowBlur=R*.08;ctx.fill();const g=ctx.createLinearGradient(-w*.35,-h*.4,w*.4,h*.5);g.addColorStop(0,'#68e5ff');g.addColorStop(.32,'#2f9ed1');g.addColorStop(.68,'#0d4e90');g.addColorStop(1,'#06275d');ctx.beginPath();ctx.moveTo(0,-h*.52);ctx.lineTo(w*.5,h*.48);ctx.lineTo(-w*.5,h*.48);ctx.closePath();ctx.fillStyle=g;ctx.shadowColor='rgba(67,219,255,.65)';ctx.shadowBlur=R*.05;ctx.fill();ctx.beginPath();ctx.moveTo(0,-h*.52);ctx.lineTo(w*.5,h*.48);ctx.lineTo(w*.34,h*.37);ctx.closePath();ctx.fillStyle='rgba(2,25,74,.28)';ctx.fill();drawText(S.text,0,h*.19,w*.64,h*.36,R);ctx.restore()}
+function fluid(cx,cy,R,px,py,t,p){const g=ctx.createRadialGradient(px-R*.16,py-R*.18,R*.04,px,py,R*.9);g.addColorStop(0,'#1b6193');g.addColorStop(.42,'#0a315d');g.addColorStop(.78,'#04162d');g.addColorStop(1,'#010712');ctx.fillStyle=g;ctx.fillRect(cx-R*1.4,cy-R*1.4,R*2.8,R*2.8);const wy=cy-R*.34+Math.sin(t*.0014)*R*.016;ctx.beginPath();for(let i=0;i<=32;i++){const x=cx-R+i/32*R*2,y=wy+Math.sin(i*.65+t*.002)*R*.012;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.strokeStyle='rgba(116,230,255,.16)';ctx.lineWidth=Math.max(1,R*.008);ctx.stroke();for(const b of bubbles){const q=(b.y+t*b.v*.001+1)%2-1,x=cx+b.x*R+Math.sin(t*.0015+b.x*8)*R*.018,y=cy-q*R;ctx.beginPath();ctx.arc(x,y,R*b.r,0,TAU);ctx.strokeStyle='rgba(173,242,255,.2)';ctx.lineWidth=Math.max(.7,R*.004);ctx.stroke()}drawDie(cx,cy,R,t,p)}
+function portal(cx,cy,R,b,t,p){const n=b.n;if(n.z<=.001)return n;const rr=R*.54,d=Math.sqrt(R*R-rr*rr),px=cx+n.x*d,py=cy-n.y*d,v=smooth(-.02,.14,n.z);ctx.save();ctx.globalAlpha=v;project(px,py,rr,b.ex,b.ey);ctx.beginPath();ctx.arc(0,0,1,0,TAU);ctx.clip();base();fluid(cx,cy,R,px,py,t,p);const shade=ctx.createLinearGradient(px-rr,py,px+rr,py);shade.addColorStop(0,`rgba(0,4,14,${.15+(1-n.z)*.5})`);shade.addColorStop(.55,'rgba(0,0,0,0)');shade.addColorStop(1,`rgba(0,0,0,${.05+(1-n.z)*.28})`);ctx.fillStyle=shade;ctx.fillRect(px-rr*1.3,py-rr*1.3,rr*2.6,rr*2.6);const glass=ctx.createRadialGradient(px-rr*.32,py-rr*.42,0,px,py,rr*1.2);glass.addColorStop(0,'rgba(226,251,255,.13)');glass.addColorStop(.28,'rgba(127,232,255,.045)');glass.addColorStop(.75,'rgba(0,0,0,0)');glass.addColorStop(1,'rgba(0,0,0,.25)');ctx.fillStyle=glass;ctx.fillRect(px-rr*1.4,py-rr*1.4,rr*2.8,rr*2.8);ctx.restore();ctx.save();ctx.globalAlpha=v;project(px,py,rr,b.ex,b.ey);ctx.beginPath();ctx.arc(0,0,1.035,0,TAU);ctx.lineWidth=.12;ctx.strokeStyle='#01050a';ctx.shadowColor='#000';ctx.shadowBlur=.08;ctx.stroke();ctx.beginPath();ctx.arc(0,0,.96,0,TAU);ctx.lineWidth=.024;ctx.strokeStyle='rgba(71,218,247,.78)';ctx.shadowColor='#2ddbff';ctx.shadowBlur=.05;ctx.stroke();ctx.restore();return n}
+function back(cx,cy,R,b){const n={x:-b.n.x,y:-b.n.y,z:-b.n.z};if(n.z<=.001)return;const ex={x:-b.ex.x,y:-b.ex.y,z:-b.ex.z},ey=b.ey,rr=R*.43,d=Math.sqrt(R*R-rr*rr),px=cx+n.x*d,py=cy-n.y*d,v=smooth(-.02,.14,n.z);ctx.save();ctx.globalAlpha=v;project(px,py,rr,ex,ey);const g=ctx.createRadialGradient(-.28,-.32,.05,0,0,1.1);g.addColorStop(0,'#fff');g.addColorStop(.5,'#d6edf3');g.addColorStop(1,'#819eaa');ctx.beginPath();ctx.arc(0,0,1,0,TAU);ctx.fillStyle=g;ctx.shadowColor='#000';ctx.shadowBlur=.08;ctx.fill();ctx.beginPath();ctx.arc(0,0,1.04,0,TAU);ctx.lineWidth=.12;ctx.strokeStyle='#02060b';ctx.stroke();ctx.restore();let ty=ey,det=ex.x*(-ey.y)-(-ex.y)*ey.x;if(det<0)ty={x:-ey.x,y:-ey.y,z:-ey.z};ctx.save();ctx.globalAlpha=v;project(px,py,rr,ex,ty);ctx.fillStyle='#07131e';ctx.font='900 .54px Inter,system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('8.5',0,.06);ctx.restore()}
+function render(t){resize();const dt=Math.min(.05,Math.max(0,(t-S.lastFrame)/1000));S.lastFrame=t;if(!S.drag&&!reduced&&(Math.abs(S.vy)+Math.abs(S.vp)>.002)){S.yaw+=S.vy*dt;S.pitch+=S.vp*dt;const decay=Math.pow(.045,dt);S.vy*=decay;S.vp*=decay}else if(!S.drag){S.vy=S.vp=0}if(S.shakeAt&&t-S.shakeAt>=900)S.shakeAt=0;const p=S.shakeAt?clamp((t-S.shakeAt)/900,0,1):0,d=p?1-p:0,jx=reduced?0:Math.sin(p*Math.PI*29)*S.w*.018*d,jy=reduced?0:Math.cos(p*Math.PI*23)*S.h*.008*d;let yaw=S.yaw,pitch=S.pitch;if(p&&!reduced){yaw+=Math.cos(p*Math.PI*17)*.11*d;pitch+=Math.sin(p*Math.PI*21)*.085*d}const b=basis(yaw,pitch),cx=S.w/2+jx,cy=S.h/2+jy,R=Math.min(S.w,S.h)*.43;base();ctx.clearRect(0,0,S.w,S.h);ctx.save();ctx.translate(cx,cy+R*.88);ctx.scale(1,.23);const sh=ctx.createRadialGradient(0,0,R*.08,0,0,R*.92);sh.addColorStop(0,'rgba(0,0,0,.58)');sh.addColorStop(.62,'rgba(0,0,0,.26)');sh.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=sh;ctx.beginPath();ctx.arc(0,0,R*.92,0,TAU);ctx.fill();ctx.restore();ctx.save();ctx.beginPath();ctx.arc(cx,cy,R,0,TAU);ctx.clip();const sg=ctx.createRadialGradient(cx-R*.37,cy-R*.47,R*.04,cx+R*.08,cy+R*.12,R*1.15);['#5d7182','#314454','#152230','#070d15','#010307','#000'].forEach((c,i)=>sg.addColorStop([0,.13,.34,.64,.88,1][i],c));ctx.fillStyle=sg;ctx.fillRect(cx-R,cy-R,R*2,R*2);for(const d0 of dots){const q=rot(d0,b);if(q.z>.06){ctx.beginPath();ctx.arc(cx+q.x*R*.965,cy-q.y*R*.965,d0.s*(.35+q.z*.7),0,TAU);ctx.fillStyle=`rgba(185,224,240,${.008+q.z*.018})`;ctx.fill()}}const gl=ctx.createRadialGradient(cx-R*.38,cy-R*.48,0,cx-R*.3,cy-R*.38,R*.82);gl.addColorStop(0,'rgba(239,252,255,.24)');gl.addColorStop(.17,'rgba(199,240,255,.08)');gl.addColorStop(.47,'rgba(82,152,184,.018)');gl.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gl;ctx.fillRect(cx-R,cy-R,R*2,R*2);back(cx,cy,R,b);const n=portal(cx,cy,R,b,t,p);ctx.restore();ctx.save();ctx.beginPath();ctx.arc(cx,cy,R-.8,0,TAU);const eg=ctx.createRadialGradient(cx,cy,R*.74,cx,cy,R);eg.addColorStop(0,'rgba(0,0,0,0)');eg.addColorStop(.78,'rgba(0,0,0,.08)');eg.addColorStop(1,'rgba(0,0,0,.62)');ctx.fillStyle=eg;ctx.fill();ctx.restore();ctx.beginPath();ctx.arc(cx,cy,R,0,TAU);ctx.lineWidth=Math.max(1.4,R*.011);ctx.strokeStyle='rgba(58,93,113,.9)';ctx.shadowColor='rgba(22,221,242,.12)';ctx.shadowBlur=R*.11;ctx.stroke();orb.dataset.portalX=n.x.toFixed(4);orb.dataset.portalY=n.y.toFixed(4);orb.dataset.portalZ=n.z.toFixed(4);requestAnimationFrame(render)}
+function setAnswer(t){S.text=t;live.textContent=t}
+function renderHistory(){history.replaceChildren();if(!S.entries.length){const p=document.createElement('p');p.className='empty-state';p.textContent='The oracle has not yet spoken.';history.append(p);return}for(const e of S.entries){const d=document.createElement('div'),q=document.createElement('span'),a=document.createElement('strong');d.className='entry';q.textContent=`${e.question} • ${e.mode}`;a.textContent=e.answer;d.append(q,a);history.append(d)}}
+function shake(){if(S.busy)return;S.busy=true;S.count++;S.shakeAt=performance.now();S.vy=S.vp=0;shakeBtn.disabled=true;setAnswer('CONSULTING THE VOID…');clearTimeout(S.timer);S.timer=setTimeout(()=>{const a=replies[mode.value]||replies.oracle;S.last=a[rnd(a.length)];setAnswer(S.last);S.entries.unshift({question:question.value.trim()||'An unspoken question',answer:S.last,mode:mode.options[mode.selectedIndex].text});S.entries=S.entries.slice(0,8);renderHistory();stability.textContent=`REALITY STABILITY: ${Math.max(8,100-S.count*9)}%`;S.busy=false;shakeBtn.disabled=false},reduced?80:760)}
+function down(e){if(e.button!==undefined&&e.button!==0)return;S.vy=S.vp=0;S.drag={id:e.pointerId,x:e.clientX,y:e.clientY,t:performance.now(),m:false};orb.classList.add('dragging');orb.setPointerCapture(e.pointerId);e.preventDefault()}
+function move(e){const d=S.drag;if(!d||e.pointerId!==d.id)return;const dx=e.clientX-d.x,dy=e.clientY-d.y,now=performance.now(),dt=Math.max(8,now-d.t)/1000;if(Math.abs(dx)+Math.abs(dy)>2)d.m=true;S.yaw+=dx*.008;S.pitch+=dy*.008;S.vy=clamp(dx*.008/dt,-8,8);S.vp=clamp(dy*.008/dt,-8,8);d.x=e.clientX;d.y=e.clientY;d.t=now;e.preventDefault()}
+function up(e){const d=S.drag;if(!d||e.pointerId!==d.id)return;S.drag=null;orb.classList.remove('dragging');if(orb.hasPointerCapture(e.pointerId))orb.releasePointerCapture(e.pointerId);if(!d.m){S.vy=S.vp=0;shake()}}
+orb.addEventListener('pointerdown',down);orb.addEventListener('pointermove',move);orb.addEventListener('pointerup',up);orb.addEventListener('pointercancel',up);orb.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();shake();return}const k=Math.PI/12;if(e.key==='ArrowLeft')S.yaw-=k;if(e.key==='ArrowRight')S.yaw+=k;if(e.key==='ArrowUp')S.pitch-=k;if(e.key==='ArrowDown')S.pitch+=k;if(e.key.startsWith('Arrow')){e.preventDefault();S.vy=S.vp=0}});shakeBtn.addEventListener('click',shake);question.addEventListener('keydown',e=>{if(e.key==='Enter')shake()});resetBtn.addEventListener('click',()=>{clearTimeout(S.timer);Object.assign(S,{yaw:0,pitch:0,vy:0,vp:0,count:0,last:'',busy:false,entries:[],shakeAt:0});shakeBtn.disabled=false;setAnswer('THE VOID AWAITS YOUR QUESTION');stability.textContent='REALITY STABILITY: 100%';renderHistory()});shareBtn.addEventListener('click',async()=>{if(!S.last)return;const text=`🎱 8.5 BALL\nQ: ${question.value.trim()||'An unspoken question'}\nA: ${S.last}`;try{await navigator.clipboard.writeText(text);shareBtn.textContent='COPIED!';setTimeout(()=>shareBtn.textContent='COPY PROPHECY',1400)}catch{prompt('Copy your prophecy:',text)}});addEventListener('devicemotion',e=>{const a=e.accelerationIncludingGravity;if(!a)return;const m=Math.hypot(a.x||0,a.y||0,a.z||0),n=Date.now();if(m>24&&n-S.lastMotion>1800){S.lastMotion=n;shake()}});new ResizeObserver(resize).observe(orb);window.__eightBallDebug={getPortalNormal:()=>basis().n,setAnswer,shake,reset:()=>resetBtn.click()};resize();renderHistory();requestAnimationFrame(render);
