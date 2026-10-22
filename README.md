@@ -1,5 +1,7 @@
 # 🎱 8.5 BALL — Consult the Algorithm
 
+**Play:** https://ncypher.github.io/8.5_Ball/ · **Second opinion:** the [Claude Opus 5.5 edition](https://ncypher.github.io/8.5_Ball.Opus.5.5/) ([source](https://github.com/ncypher/8.5_Ball.Opus.5.5)) is the same idea, rebuilt by another model.
+
 A standalone, mobile-friendly AI-oracle-inspired Magic 8 Ball remix.
 
 ## Features
